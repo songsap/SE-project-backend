@@ -125,28 +125,3 @@ export const logout = asyncHandler(async (_req: Request, res: Response) => {
   res.clearCookie('token', { httpOnly: true, sameSite: 'lax' });
   res.json({ message: 'Logged out' });
 });
-
-//update restaurant info
-//PUT /auth/me/restaurant
-export const getMyRestaurant = asyncHandler(async (req, res) => {
-  const rId = req.user!.restaurantId!;
-  const restaurant = await Restaurant.findById(rId).lean();
-  if (!restaurant) return res.status(404).json({ message: 'Restaurant not found' });
-  res.json(restaurant);
-});
-
-export const updateMyRestaurant = asyncHandler(async (req, res) => {
-  const rId = req.user!.restaurantId!;
-  const { name, phone, address } = req.body as {
-    name?: string; phone?: string; address?: string;
-  };
-
-  const patch: any = {};
-  if (typeof name === 'string' && name.trim()) patch.name = name.trim();
-  if (typeof phone === 'string') patch.phone = phone.trim();
-  if (typeof address === 'string') patch.address = address.trim();
-
-  const updated = await Restaurant.findByIdAndUpdate(rId, patch, { new: true });
-  if (!updated) return res.status(404).json({ message: 'Restaurant not found' });
-  res.json(updated);
-});
