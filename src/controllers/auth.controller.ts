@@ -11,12 +11,23 @@ function signToken(payload: object ,rememberMe : boolean) {
   return jwt.sign(payload, process.env.JWT_SECRET!, { expiresIn});
 }
 
+function isHHMM(s?: string) {
+  return typeof s === 'string' && /^\d{2}:\d{2}$/.test(s);
+}
+
 // POST /auth/register-restaurant (public)
 export const registerRestaurant = asyncHandler(async (req: Request, res: Response) => {
-  const { name, email, phone, password, restaurantName, restaurantPhone, restaurantAddress } = req.body;
+  const { name, email, phone, password, restaurantName, restaurantPhone, restaurantAddress, restaurantType, openTime, closeTime } = req.body;
 
   const existUser = await User.findOne({ email });
   if (existUser) return res.status(400).json({ message: 'Email already in use' });
+
+  if (!restaurantType) {
+    return res.status(400).json({ message: 'restaurantType is required' });
+  }
+  if (!isHHMM(openTime) || !isHHMM(closeTime)) {
+    return res.status(400).json({ message: 'openTime/closeTime must be HH:mm (e.g., 09:00)' });
+  }
 
   const hashed = await bcrypt.hash(password, 10);
 
@@ -30,7 +41,9 @@ export const registerRestaurant = asyncHandler(async (req: Request, res: Respons
     name: restaurantName,
     slug,
     phone: restaurantPhone,
-    address: restaurantAddress
+    address: restaurantAddress,
+    type: restaurantType,                     
+    openingHours: { openTime, closeTime }
   });
 
   const user = await User.create({
