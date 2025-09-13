@@ -6,7 +6,7 @@ const restaurantSchema = new Schema(
     slug: { type: String, required: true, unique: true, lowercase: true },
     phone: { type: String },
     address: { type: String },
-    owner: { type: Types.ObjectId, ref: 'User' }
+    owner: { type: Types.ObjectId, ref: 'User' },
     type: { type: String, required: true, lowercase: true, trim: true},
     openingHours: {
       openTime: { type: String, required: true },  

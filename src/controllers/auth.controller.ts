@@ -122,6 +122,7 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
     });
 });
 
+//GETME
 export const me = asyncHandler(async (req: Request, res: Response) => {
   if (!req.user) return res.status(401).json({ message: 'Unauthorized' });
   const user = await User.findById(req.user.userId).select('-password').lean();
@@ -134,9 +135,63 @@ export const me = asyncHandler(async (req: Request, res: Response) => {
   res.json({ user, restaurant });
 });
 
+//LOGOUT
 export const logout = asyncHandler(async (_req: Request, res: Response) => {
   res.clearCookie('token', { httpOnly: true, sameSite: 'lax' });
   res.json({ message: 'Logged out' });
+});
+
+// PUT /api/v1/auth/me
+export const updateMe = asyncHandler(async (req, res) => {
+  const userId = req.user!.userId;
+  const { name, phone, email } = req.body as {
+    name?: string;
+    phone?: string;
+    email?: string;
+  };
+
+  const patch: any = {};
+
+  if (typeof name === 'string' && name.trim()) patch.name = name.trim();
+  if (typeof phone === 'string') patch.phone = phone.trim();
+
+  if (typeof email === 'string' && email.trim()) {
+    const nextEmail = email.trim().toLowerCase();
+
+    const exists = await User.findOne({ email: nextEmail, _id: { $ne: userId } });
+    if (exists) return res.status(400).json({ message: 'Email already in use' });
+
+    patch.email = nextEmail;
+  }
+
+  const updated = await User.findByIdAndUpdate(userId, patch, { new: true }).select('-password');
+  if (!updated) return res.status(404).json({ message: 'User not found' });
+
+  return res.json(updated);
+});
+
+// PATCH /api/v1/auth/me/password
+export const changeMyPassword = asyncHandler(async (req, res) => {
+  const userId = req.user!.userId;
+  const { currentPassword, newPassword } = req.body as {
+    currentPassword?: string;
+    newPassword?: string;
+  };
+
+  if (!currentPassword || !newPassword) {
+    return res.status(400).json({ message: 'currentPassword and newPassword are required' });
+  }
+
+  const user = await User.findById(userId);
+  if (!user) return res.status(404).json({ message: 'User not found' });
+
+  const ok = await bcrypt.compare(currentPassword, user.password);
+  if (!ok) return res.status(400).json({ message: 'Current password is incorrect' });
+
+  user.password = await bcrypt.hash(newPassword, 10);
+  await user.save();
+
+  return res.json({ message: 'Password updated' });
 });
 
 //update restaurant info
