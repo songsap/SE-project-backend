@@ -125,13 +125,36 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
 //GETME
 export const me = asyncHandler(async (req: Request, res: Response) => {
   if (!req.user) return res.status(401).json({ message: 'Unauthorized' });
-  const user = await User.findById(req.user.userId).select('-password').lean();
-  if (!user) return res.status(404).json({ message: 'User not found' });
 
-  let restaurant = null;
-  if (user.role === 'restaurant' && user.restaurantId) {
-    restaurant = await Restaurant.findById(user.restaurantId).lean();
+  const u = await User.findById(req.user.userId).lean();
+  if (!u) return res.status(404).json({ message: 'User not found' });
+
+  const user = {
+    id: u._id,
+    name: u.name,
+    phone: u.phone,
+    email: u.email,
+    role: u.role,
+    restaurantId: u.restaurantId || null
+  };
+
+  let restaurant: any = null;
+  if (u.role === 'restaurant' && u.restaurantId) {
+    const r = await Restaurant.findById(u.restaurantId).lean();
+    if (r) {
+      restaurant = {
+        id: r._id,
+        name: r.name,
+        slug: r.slug,
+        phone: r.phone,
+        address: r.address,
+        type: r.type || null,
+        openTime: r.openingHours?.openTime || null,
+        closeTime: r.openingHours?.closeTime || null
+      };
+    }
   }
+
   res.json({ user, restaurant });
 });
 
@@ -197,10 +220,19 @@ export const changeMyPassword = asyncHandler(async (req, res) => {
 //update restaurant info
 //PUT /auth/me/restaurant
 export const getMyRestaurant = asyncHandler(async (req, res) => {
-  const rId = req.user!.restaurantId!;
-  const restaurant = await Restaurant.findById(rId).lean();
-  if (!restaurant) return res.status(404).json({ message: 'Restaurant not found' });
-  res.json(restaurant);
+  const r = await Restaurant.findById(req.user!.restaurantId!).lean();
+  if (!r) return res.status(404).json({ message: 'Restaurant not found' });
+
+  return res.json({
+    id: r._id,
+    name: r.name,
+    slug: r.slug,
+    phone: r.phone,
+    address: r.address,
+    type: r.type || null,
+    openTime: r.openingHours?.openTime || null,
+    closeTime: r.openingHours?.closeTime || null
+  });
 });
 
 export const updateMyRestaurant = asyncHandler(async (req, res) => {
