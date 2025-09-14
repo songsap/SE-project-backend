@@ -42,8 +42,9 @@ export const registerRestaurant = asyncHandler(async (req: Request, res: Respons
     slug,
     phone: restaurantPhone,
     address: restaurantAddress,
-    type: restaurantType,                     
-    openingHours: { openTime, closeTime }
+    type: String(restaurantType).trim().toLowerCase(),                 
+    openTime,
+    closeTime
   });
 
   const user = await User.create({

@@ -8,10 +8,8 @@ const restaurantSchema = new Schema(
     address: { type: String },
     owner: { type: Types.ObjectId, ref: 'User' },
     type: { type: String, required: true, lowercase: true, trim: true},
-    openingHours: {
-      openTime: { type: String, required: true },  
-      closeTime: { type: String, required: true } 
-    }
+    openTime: { type: String, required: true },
+    closeTime: { type: String, required: true } 
   },
   { timestamps: true }
 );
