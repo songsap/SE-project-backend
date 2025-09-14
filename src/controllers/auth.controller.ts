@@ -15,14 +15,14 @@ function isHHMM(s?: string) {
   return typeof s === 'string' && /^\d{2}:\d{2}$/.test(s);
 }
 
-// POST /auth/register-restaurant (public)
+// Register restaurant and owner
 export const registerRestaurant = asyncHandler(async (req: Request, res: Response) => {
-  const { name, email, phone, password, restaurantName, restaurantPhone, restaurantAddress, restaurantType, openTime, closeTime } = req.body;
+  const { name, email, phone, password, restaurantName, restaurantPhone, restaurantAddress, type, openTime, closeTime } = req.body;
 
   const existUser = await User.findOne({ email });
   if (existUser) return res.status(400).json({ message: 'Email already in use' });
 
-  if (!restaurantType) {
+  if (!type) {
     return res.status(400).json({ message: 'restaurantType is required' });
   }
   if (!isHHMM(openTime) || !isHHMM(closeTime)) {
@@ -42,7 +42,7 @@ export const registerRestaurant = asyncHandler(async (req: Request, res: Respons
     slug,
     phone: restaurantPhone,
     address: restaurantAddress,
-    type: String(restaurantType).trim().toLowerCase(),                 
+    type: String(type).trim().toLowerCase(),                 
     openTime,
     closeTime
   });
@@ -81,7 +81,7 @@ export const registerRestaurant = asyncHandler(async (req: Request, res: Respons
     });
 });
 
-// POST /auth/login
+// Login
 export const login = asyncHandler(async (req: Request, res: Response) => {
   const { email, password , rememberMe } = req.body;
   const user = await User.findOne({ email });
@@ -123,7 +123,7 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
     });
 });
 
-//GETME
+// GETME
 export const me = asyncHandler(async (req: Request, res: Response) => {
   if (!req.user) return res.status(401).json({ message: 'Unauthorized' });
 
@@ -150,8 +150,8 @@ export const me = asyncHandler(async (req: Request, res: Response) => {
         phone: r.phone,
         address: r.address,
         type: r.type || null,
-        openTime: r.openingHours?.openTime || null,
-        closeTime: r.openingHours?.closeTime || null
+        openTime: r.openTime || null,
+        closeTime: r.closeTime || null
       };
     }
   }
@@ -159,13 +159,13 @@ export const me = asyncHandler(async (req: Request, res: Response) => {
   res.json({ user, restaurant });
 });
 
-//LOGOUT
+// LOGOUT
 export const logout = asyncHandler(async (_req: Request, res: Response) => {
   res.clearCookie('token', { httpOnly: true, sameSite: 'lax' });
   res.json({ message: 'Logged out' });
 });
 
-// PUT /api/v1/auth/me
+// Update my profile
 export const updateMe = asyncHandler(async (req, res) => {
   const userId = req.user!.userId;
   const { name, phone, email } = req.body as {
@@ -194,7 +194,7 @@ export const updateMe = asyncHandler(async (req, res) => {
   return res.json(updated);
 });
 
-// PATCH /api/v1/auth/me/password
+// Update my password 
 export const changeMyPassword = asyncHandler(async (req, res) => {
   const userId = req.user!.userId;
   const { currentPassword, newPassword } = req.body as {
@@ -218,8 +218,7 @@ export const changeMyPassword = asyncHandler(async (req, res) => {
   return res.json({ message: 'Password updated' });
 });
 
-//update restaurant info
-//PUT /auth/me/restaurant
+// Get my restaurant details
 export const getMyRestaurant = asyncHandler(async (req, res) => {
   const r = await Restaurant.findById(req.user!.restaurantId!).lean();
   if (!r) return res.status(404).json({ message: 'Restaurant not found' });
@@ -231,15 +230,16 @@ export const getMyRestaurant = asyncHandler(async (req, res) => {
     phone: r.phone,
     address: r.address,
     type: r.type || null,
-    openTime: r.openingHours?.openTime || null,
-    closeTime: r.openingHours?.closeTime || null
+    openTime: r.openTime || null,
+    closeTime: r.closeTime || null
   });
 });
 
+// Update my restaurant details
 export const updateMyRestaurant = asyncHandler(async (req, res) => {
   const rId = req.user!.restaurantId!;
-  const { name, phone, address } = req.body as {
-    name?: string; phone?: string; address?: string;
+  const { name, phone, address, type, openTime, closeTime } = req.body as {
+    name?: string; phone?: string; address?: string; type?: string; openTime?: string; closeTime?: string;
   };
 
   const patch: any = {};
@@ -247,7 +247,29 @@ export const updateMyRestaurant = asyncHandler(async (req, res) => {
   if (typeof phone === 'string') patch.phone = phone.trim();
   if (typeof address === 'string') patch.address = address.trim();
 
+  if (typeof type === 'string' && type.trim()) {
+    patch.type = type.trim().toLowerCase();
+  } 
+  if (openTime !== undefined) {
+    if (!isHHMM(openTime)) return res.status(400).json({ message: 'openTime must be HH:mm' });
+    patch.openTime = openTime;
+  }
+  if (closeTime !== undefined) {
+    if (!isHHMM(closeTime)) return res.status(400).json({ message: 'closeTime must be HH:mm' });
+    patch.closeTime = closeTime;
+  }
+
   const updated = await Restaurant.findByIdAndUpdate(rId, patch, { new: true });
   if (!updated) return res.status(404).json({ message: 'Restaurant not found' });
-  res.json(updated);
+  
+  res.json({
+    id: updated._id,
+    name: updated.name,
+    slug: updated.slug,
+    phone: updated.phone,
+    address: updated.address,
+    type: updated.type,
+    openTime: updated.openTime,
+    closeTime: updated.closeTime
+  });
 });
