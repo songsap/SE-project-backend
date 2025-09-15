@@ -1,7 +1,13 @@
 import { Request, Response } from 'express';
-import MenuItem from '../models/MenuItem';
+import MenuItem, { MENU_CATEGORIES } from '../models/MenuItem';
 import { asyncHandler } from '../utils/asyncHandler';
 import { saveImageBuffer } from '../utils/uploader';
+
+function normalizeCategory(input: any): string | undefined {
+  if (typeof input !== 'string') return undefined;
+  const c = input.trim();
+  return (MENU_CATEGORIES as readonly string[]).includes(c) ? c : undefined;
+}
 
 export const createItem = asyncHandler(async (req: Request, res: Response) => {
   const rId = req.user!.restaurantId!;
@@ -12,12 +18,20 @@ export const createItem = asyncHandler(async (req: Request, res: Response) => {
     imageUrl = await saveImageBuffer((req as any).file);
   }
 
+  const category = normalizeCategory(body.category) ?? 'อื่นๆ';
+  if (body.category !== undefined && category === undefined) {
+    return res.status(400).json({
+      message: 'Invalid category',
+      allowed: MENU_CATEGORIES
+    });
+  }
+
   const item = await MenuItem.create({
     restaurantId: rId,
     name: body.name,
     description: body.description,
     price: body.price,
-    category: body.category || 'General',
+    category,
     isAvailable: body.isAvailable !== 'false',
     orderIndex: Number(body.orderIndex || 0),
     imageUrl,
@@ -44,6 +58,17 @@ export const updateItem = asyncHandler(async (req: Request, res: Response) => {
   const rId = req.user!.restaurantId!;
   const patch: any = { ...req.body };
   if ((req as any).file) patch.imageUrl = await saveImageBuffer((req as any).file);
+
+  if (patch.category !== undefined) {
+    const cat = normalizeCategory(patch.category);
+    if (!cat) {
+      return res.status(400).json({
+        message: 'Invalid category',
+        allowed: MENU_CATEGORIES
+      });
+    }
+    patch.category = cat;
+  }
 
   const item = await MenuItem.findOneAndUpdate(
     { _id: req.params.id, restaurantId: rId },
