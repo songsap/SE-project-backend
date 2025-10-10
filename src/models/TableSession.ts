@@ -1,4 +1,4 @@
-import { Schema, model, Types, InferSchemaType } from 'mongoose';
+import { Schema, model, Types} from 'mongoose';
 import crypto from 'crypto';
 
 export type TableSessionStatus = 'ACTIVE' | 'CLOSED' | 'RESET';
@@ -26,7 +26,7 @@ const tableSessionSchema = new Schema(
 
 //TTL index เพื่อให้ Mongo ลบข้อมูลเองตอน expiresAt
 tableSessionSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
-
-export type TableSessionDoc = InferSchemaType<typeof tableSessionSchema> & { _id: Types.ObjectId };
+//active table
+tableSessionSchema.index({ restaurantId: 1, tableNo: 1, status: 1 });
 
 export default model('TableSession', tableSessionSchema);

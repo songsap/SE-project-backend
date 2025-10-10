@@ -1,4 +1,4 @@
-import { Schema, model, Types, InferSchemaType } from 'mongoose';
+import { Schema, model, Types} from 'mongoose';
 
 export type OrderStatus = 'PENDING' | 'IN_PROGRESS' | 'READY' | 'SERVED';
 
@@ -36,7 +36,5 @@ const orderSchema = new Schema(
 
 orderSchema.index({ restaurantId: 1, status: 1, createdAt: -1 });
 orderSchema.index({ tableSessionId: 1, createdAt: -1 });
-
-export type OrderDoc = InferSchemaType<typeof orderSchema> & { _id: Types.ObjectId };
 
 export default model('Order', orderSchema);
