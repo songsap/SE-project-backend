@@ -9,6 +9,7 @@ declare global {
     }
     interface Request {
       user?: UserPayload;
+      session?: { token: string; session: any };
     }
   }
 }
