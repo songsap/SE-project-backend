@@ -14,7 +14,7 @@ const tableSessionSchema = new Schema(
     restaurantId: { type: Types.ObjectId, ref: 'Restaurant', required: true, index: true },
     tableNo:      { type: String, required: true, trim: true, index: true },
     tokenHash:    { type: String, required: true, unique: true },
-    status:       { type: String, enum: ['ACTIVE', 'CLOSED'], default: 'ACTIVE', index: true },
+    status:       { type: String, enum: ['ACTIVE', 'CLOSED', 'RESET'], default: 'ACTIVE', index: true },
     openedAt:     { type: Date, default: Date.now },
     expiresAt:    { type: Date },
     lastActiveAt: { type: Date, default: Date.now },
