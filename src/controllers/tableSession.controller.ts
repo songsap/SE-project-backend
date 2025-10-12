@@ -1,15 +1,13 @@
 import { Request, Response } from 'express';
 import crypto from 'crypto';
 import { asyncHandler } from '../utils/asyncHandler';
-import TableSession, { sha256Hex } from '../models/TableSession';
+import TableSession from '../models/TableSession';
 import Restaurant from '../models/Restaurant';
 
 //expire time kub
 const SESSION_TTL_HOURS = 3;
 
-function newToken(): string {
-  return crypto.randomBytes(32).toString('hex');
-}
+const newToken = () => crypto.randomBytes(32).toString('hex');
 
 //สมมุติว่าเปิด session ไปแล้ว แล้วมีคนสแกนอีก จะให้ token เดิม
 export const openSession = asyncHandler(async (req: Request, res: Response) => {
@@ -19,28 +17,24 @@ export const openSession = asyncHandler(async (req: Request, res: Response) => {
   const restaurant = await Restaurant.findOne({ slug: restaurantSlug });
   if (!restaurant) return res.status(404).json({ message: 'Restaurant not found' });
 
-  const existing = await TableSession.findOne({
-    restaurantId: restaurant._id,
-    tableNo,
-    status: 'ACTIVE',
-  });
-
+  const existing = await TableSession.findOne({ restaurantId: restaurant._id, tableNo, status: 'ACTIVE' });
   if (existing) {
     return res.json({
+      ok: true,
       sessionId: existing._id,
-      token: 'REDACTED',
-      info: 'active-session-exists',
+      token: existing.token,              
+      tableNo: existing.tableNo,
+      expiresAt: existing.expiresAt,
+      restaurant: { id: restaurant._id, name: restaurant.name, slug: restaurant.slug },
     });
   }
 
   const token = newToken();
-  const tokenHash = sha256Hex(token);
-
   const expiresAt = new Date(Date.now() + SESSION_TTL_HOURS * 60 * 60 * 1000);
   const doc = await TableSession.create({
     restaurantId: restaurant._id,
     tableNo,
-    tokenHash,
+    token,                                
     status: 'ACTIVE',
     openedAt: new Date(),
     expiresAt,
@@ -48,9 +42,12 @@ export const openSession = asyncHandler(async (req: Request, res: Response) => {
   });
 
   res.status(201).json({
+    ok: true,
     sessionId: doc._id,
     token, // FE เก็บไว้ แล้วแนบเป็น x-session-token
+    tableNo: doc.tableNo,
     expiresAt,
+    restaurant: { id: restaurant._id, name: restaurant.name, slug: restaurant.slug },
   });
 });
 
@@ -58,15 +55,22 @@ export const validateSession = asyncHandler(async (req: Request, res: Response) 
   const token = (req.query.token as string) || (req.header('x-session-token') as string);
   if (!token) return res.status(400).json({ message: 'token required' });
 
-  const sess = await TableSession.findOne({ tokenHash: sha256Hex(token), status: 'ACTIVE' }).lean();
+  const sess = await TableSession.findOne({ token, status: 'ACTIVE' }).lean();
   if (!sess) return res.status(401).json({ ok: false });
-
   if (sess.expiresAt && sess.expiresAt < new Date()) return res.status(401).json({ ok: false });
 
-  res.json({ ok: true, sessionId: sess._id, restaurantId: sess.restaurantId, tableNo: sess.tableNo });
+  const restaurant = await Restaurant.findById(sess.restaurantId).select('name slug').lean();
+  res.json({
+    ok: true,
+    sessionId: sess._id,
+    restaurantId: sess.restaurantId,
+    tableNo: sess.tableNo,
+    expiresAt: sess.expiresAt,
+    restaurant: restaurant ? { id: restaurant._id, name: restaurant.name, slug: restaurant.slug } : null,
+  });
 });
 
-// ปิดหรือรีเซ็ตโต๊ะ (ฝั่งร้าน)
+// staff
 export const closeSession = asyncHandler(async (req: Request, res: Response) => {
   const rId = req.user!.restaurantId!;
   const { id } = req.params;
@@ -75,12 +79,12 @@ export const closeSession = asyncHandler(async (req: Request, res: Response) => 
   if (!sess) return res.status(404).json({ message: 'Session not found' });
 
   sess.status = 'CLOSED';
-  sess.tokenHash = sha256Hex(newToken());
   await sess.save();
 
   res.json({ ok: true });
 });
 
+// staff
 export const resetSession = asyncHandler(async (req: Request, res: Response) => {
   const rId = req.user!.restaurantId!;
   const { id } = req.params;
@@ -89,10 +93,10 @@ export const resetSession = asyncHandler(async (req: Request, res: Response) => 
   if (!sess) return res.status(404).json({ message: 'Session not found' });
 
   sess.status = 'RESET';
-  sess.tokenHash = sha256Hex(newToken());
+  sess.token = newToken();  
   sess.openedAt = new Date();
   sess.expiresAt = new Date(Date.now() + SESSION_TTL_HOURS * 60 * 60 * 1000);
   await sess.save();
 
-  res.json({ ok: true });
+  res.json({ ok: true, sessionId: sess._id, token: sess.token, expiresAt: sess.expiresAt });
 });

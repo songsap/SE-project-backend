@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import TableSession, { sha256Hex } from '../models/TableSession';
+import TableSession from '../models/TableSession';
 
 export default async function session(req: Request, res: Response, next: NextFunction) {
   const token =
@@ -9,9 +9,8 @@ export default async function session(req: Request, res: Response, next: NextFun
 
   if (!token) return res.status(401).json({ message: 'Missing session token' });
 
-  const tokenHash = sha256Hex(token);
   const now = new Date();
-  const sess = await TableSession.findOne({ tokenHash, status: 'ACTIVE' });
+  const sess = await TableSession.findOne({ status: 'ACTIVE' });
   if (!sess) return res.status(401).json({ message: 'Invalid or inactive session' });
   if (sess.expiresAt && sess.expiresAt < now) return res.status(401).json({ message: 'Session expired' });
 
