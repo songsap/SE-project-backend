@@ -10,13 +10,15 @@ import tableSessionRoutes from './routes/table-sessions.routes';
 import orderRoutes from './routes/orders.routes';
 
 const app = express();
+
 app.use(cors({ origin: true, credentials: true }));
 app.use(morgan('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
+const uploadsRoot = path.resolve(__dirname, '../../uploads');
+app.use('/uploads', express.static(uploadsRoot));
 
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/menu', menuRoutes);
