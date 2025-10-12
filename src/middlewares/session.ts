@@ -10,7 +10,7 @@ export default async function session(req: Request, res: Response, next: NextFun
   if (!token) return res.status(401).json({ message: 'Missing session token' });
 
   const now = new Date();
-  const sess = await TableSession.findOne({ status: 'ACTIVE' });
+  const sess = await TableSession.findOne({ token, status: 'ACTIVE' });
   if (!sess) return res.status(401).json({ message: 'Invalid or inactive session' });
   if (sess.expiresAt && sess.expiresAt < now) return res.status(401).json({ message: 'Session expired' });
 
