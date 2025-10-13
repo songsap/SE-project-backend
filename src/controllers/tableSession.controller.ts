@@ -17,7 +17,9 @@ export const openSession = asyncHandler(async (req: Request, res: Response) => {
   const restaurant = await Restaurant.findOne({ slug: restaurantSlug });
   if (!restaurant) return res.status(404).json({ message: 'Restaurant not found' });
 
-  const existing = await TableSession.findOne({ restaurantId: restaurant._id, tableNo, status: 'ACTIVE' });
+  const normTableNo = String(tableNo).trim().toUpperCase();
+
+  const existing = await TableSession.findOne({ restaurantId: restaurant._id, tableNo: normTableNo, status: 'ACTIVE' });
   if (existing) {
     return res.json({
       ok: true,
@@ -33,7 +35,7 @@ export const openSession = asyncHandler(async (req: Request, res: Response) => {
   const expiresAt = new Date(Date.now() + SESSION_TTL_HOURS * 60 * 60 * 1000);
   const doc = await TableSession.create({
     restaurantId: restaurant._id,
-    tableNo,
+    tableNo: normTableNo,
     token,                                
     status: 'ACTIVE',
     openedAt: new Date(),

@@ -5,7 +5,7 @@ export type TableSessionStatus = 'ACTIVE' | 'CLOSED' | 'RESET';
 const tableSessionSchema = new Schema(
   {
     restaurantId: { type: Types.ObjectId, ref: 'Restaurant', required: true, index: true },
-    tableNo:      { type: String, required: true, trim: true, index: true },
+    tableNo:      { type: String, required: true, trim: true, uppercase: true, index: true },
     token:        { type: String, required: true, unique: true },
     status:       { type: String, enum: ['ACTIVE', 'CLOSED', 'RESET'], default: 'ACTIVE', index: true },
     openedAt:     { type: Date, default: Date.now },
@@ -20,6 +20,9 @@ const tableSessionSchema = new Schema(
 //TTL index เพื่อให้ Mongo ลบข้อมูลเองตอน expiresAt
 tableSessionSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 //active table
-tableSessionSchema.index({ restaurantId: 1, tableNo: 1, status: 1 });
+tableSessionSchema.index(
+  { restaurantId: 1, tableNo: 1, status: 1 },
+  { unique: true, partialFilterExpression: { status: 'ACTIVE' } }
+);
 
 export default model('TableSession', tableSessionSchema);
