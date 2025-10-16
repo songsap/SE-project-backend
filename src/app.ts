@@ -17,7 +17,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-const uploadsRoot = path.resolve(__dirname, '../../uploads');
+const uploadsRoot = path.resolve(__dirname, '../uploads');
 app.use('/uploads', express.static(uploadsRoot));
 
 app.use('/api/v1/auth', authRoutes);
