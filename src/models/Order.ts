@@ -20,7 +20,7 @@ const orderSchema = new Schema(
   {
     restaurantId:     { type: Types.ObjectId, ref: 'Restaurant', required: true, index: true },
     tableSessionId:   { type: Types.ObjectId, ref: 'TableSession', required: true, index: true },
-    sessionTokenHash: { type: String, required: true },
+    sessionToken: { type: String, required: true },
     items:    { type: [orderItemSchema], required: true },
     subtotal: { type: Number, required: true },
     total:    { type: Number, required: true },

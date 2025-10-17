@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { asyncHandler } from '../utils/asyncHandler';
 import MenuItem from '../models/MenuItem';  
 import Order, { OrderStatus } from '../models/Order';
+import TableSession from '../models/TableSession';
 
 const ALLOWED: Record<OrderStatus, OrderStatus[]> = {
   PENDING: ['IN_PROGRESS'],
@@ -57,12 +58,51 @@ export const createOrderPublic = asyncHandler(async (req: Request, res: Response
 
   res.status(201).json({ id: doc._id, status: doc.status, total: doc.total });
 });
+export const getAllOrdersPublic = async (req: Request, res: Response) => {
+  try {
+    const { tableToken } = req.params;
+
+    // หา session ของโต๊ะจาก token
+    const session = await TableSession.findOne({ token: tableToken });
+    if (!session) return res.status(404).json({ message: 'Table session not found' });
+
+    // ดึง order ทั้งหมดของ session นี้
+    const orders = await Order.find({ tableSessionId: session._id })
+      .sort({ createdAt: -1 }) // ล่าสุดขึ้นบน
+      .lean();
+
+    // ส่งเฉพาะ field ที่ต้องการ
+    const result = orders.map(o => ({
+      orderId: o._id,
+      status: o.status,
+      createdAt: o.createdAt,
+      updatedAt: o.updatedAt,
+      total: o.total,
+      items: o.items.map(i => ({
+        menuItemId: i.menuItemId,
+        name: i.name,
+        qty: i.qty,
+        price: i.price,
+        lineTotal: i.lineTotal,
+        note: i.note,
+        options: i.options,
+        status: o.status, // ถ้าอยากให้ item แยก status
+      })),
+    }));
+
+    res.json(result);
+  } catch (err: any) {
+    console.error(err);
+    res.status(500).json({ message: 'Internal Server Error', error: err.message });
+  }
+};
+
 
 export const getOrderStatusPublic = asyncHandler(async (req: Request, res: Response) => {
   const { id } = req.params;
   const order = await Order.findById(id).lean();
   if (!order) return res.status(404).json({ message: 'Order not found' });
-  res.json({ id: order._id, status: order.status, createdAt: order.createdAt, updatedAt: order.updatedAt });
+  res.json({ id: order._id, status: order.status,items: order.items, createdAt: order.createdAt, updatedAt: order.updatedAt });
 });
 
 // ฝั่งร้าน
