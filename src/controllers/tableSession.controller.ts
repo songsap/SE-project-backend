@@ -72,6 +72,25 @@ export const validateSession = asyncHandler(async (req: Request, res: Response) 
   });
 });
 
+export const getSessionById = asyncHandler(async (req: Request, res: Response) => {
+  const { id } = req.params;
+  
+  const sess = await TableSession.findById(id).lean();
+  if (!sess) return res.status(404).json({ message: 'Session not found' });
+
+  const restaurant = await Restaurant.findById(sess.restaurantId).select('name slug').lean();
+  res.json({
+    sessionId: sess._id,
+    restaurantId: sess.restaurantId,
+    tableNo: sess.tableNo,
+    status: sess.status,
+    openedAt: sess.openedAt,
+    expiresAt: sess.expiresAt,
+    lastActiveAt: sess.lastActiveAt,
+    restaurant: restaurant ? { id: restaurant._id, name: restaurant.name, slug: restaurant.slug } : null,
+  });
+});
+
 // staff
 export const closeSession = asyncHandler(async (req: Request, res: Response) => {
   const rId = req.user!.restaurantId!;
