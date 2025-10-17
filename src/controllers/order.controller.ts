@@ -49,7 +49,7 @@ export const createOrderPublic = asyncHandler(async (req: Request, res: Response
   const doc = await Order.create({
     restaurantId,
     tableSessionId: session._id,
-    sessionTokenHash: session.token,
+    sessionToken: session.token,
     items: orderItems,
     subtotal,
     total,
