@@ -12,6 +12,7 @@ const ALLOWED: Record<OrderStatus, OrderStatus[]> = {
 
 // ลูกค้าสร้าง order ด้วย x-session-token
 export const createOrderPublic = asyncHandler(async (req: Request, res: Response) => {
+ 
   const { session } = (req as any).session;
   const restaurantId = session.restaurantId;
 
@@ -47,7 +48,7 @@ export const createOrderPublic = asyncHandler(async (req: Request, res: Response
   const doc = await Order.create({
     restaurantId,
     tableSessionId: session._id,
-    sessionTokenHash: session.tokenHash,
+    sessionTokenHash: session.token,
     items: orderItems,
     subtotal,
     total,

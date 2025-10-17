@@ -2,6 +2,7 @@ import { Schema, model, Types} from 'mongoose';
 
 export type OrderStatus = 'PENDING' | 'IN_PROGRESS' | 'READY' | 'SERVED';
 
+
 const orderItemSchema = new Schema(
   {
     menuItemId: { type: Types.ObjectId, ref: 'MenuItem', required: true },
