@@ -70,6 +70,7 @@ export const createOrderPublic = asyncHandler(async (req: Request, res: Response
 
   const { items } = req.body as { items: InputItem[] };
   const snap = await buildOrderSnapshot(sess.restaurantId, items);
+  // console.log(snap);
 
   const order = await Order.create({
     restaurantId:   sess.restaurantId,
@@ -95,6 +96,7 @@ export const getAllOrdersPublic = asyncHandler(async (req: Request, res: Respons
       id: o._id,
       status: o.status,
       total: o.total,
+      items: o.items,
       hasNotes: o.hasNotes,
       createdAt: o.createdAt,
       updatedAt: o.updatedAt,
