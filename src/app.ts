@@ -2,12 +2,13 @@ import express from 'express';
 import cors from 'cors';
 import morgan from 'morgan';
 import cookieParser from 'cookie-parser';
-import path from 'path';
+// import path from 'path'; // OLD: for static file serving
 import authRoutes from './routes/auth.routes';
 import menuRoutes from './routes/menu.routes';
 import publicRoutes from './routes/public.routes';
 import tableSessionRoutes from './routes/table-sessions.routes';
 import orderRoutes from './routes/orders.routes';
+import imageRoutes from './routes/images.routes';
 
 const app = express();
 
@@ -17,12 +18,16 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-const uploadsRoot = path.resolve(__dirname, '../uploads');
-app.use('/uploads', express.static(uploadsRoot));
+// OLD STATIC FILE SERVING
+// const uploadsRoot = path.resolve(__dirname, '../uploads');
+// app.use('/uploads', express.static(uploadsRoot));
+
+// NEW: Images are now served via API endpoints instead of static files
 
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/menu', menuRoutes);
 app.use('/api/v1/public', publicRoutes);
+app.use('/api/v1/images', imageRoutes);
 
 app.use('/api/v1/table-sessions', tableSessionRoutes);
 app.use('/api/v1/orders', orderRoutes);
