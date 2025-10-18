@@ -3,7 +3,7 @@ import auth from '../middlewares/auth';
 import { requireRole } from '../middlewares/role';
 import { useRestaurantScope } from '../middlewares/scope';
 import session from '../middlewares/session';
-import { createOrderPublic, getOrderStatusPublic, listOrders, updateOrderStatus, getAllOrdersPublic } from '../controllers/order.controller';
+import { createOrderPublic, getOrderStatusPublic, listOrders, updateOrderStatus, getAllOrdersPublic, updateOrderItems} from '../controllers/order.controller';
 
 const r = Router();
 
@@ -17,5 +17,6 @@ r.get('/public/:tableToken/orders', getAllOrdersPublic);
 r.use(auth, requireRole('restaurant'), useRestaurantScope);
 r.get('/', listOrders);
 r.patch('/:id/status', updateOrderStatus);
+r.patch('/:id/items', updateOrderItems);
 
 export default r;

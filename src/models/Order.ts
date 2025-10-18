@@ -1,6 +1,6 @@
 import { Schema, model, Types} from 'mongoose';
 
-export type OrderStatus = 'PENDING' | 'IN_PROGRESS' | 'READY' | 'SERVED';
+export type OrderStatus = 'PENDING' | 'IN_PROGRESS' | 'READY' | 'SERVED' | 'CANCELLED';
 
 
 const orderItemSchema = new Schema(
@@ -27,7 +27,7 @@ const orderSchema = new Schema(
     hasNotes: { type: Boolean, default: false, index: true },
     status: {
       type: String,
-      enum: ['PENDING', 'IN_PROGRESS', 'READY', 'SERVED'],
+      enum: ['PENDING', 'IN_PROGRESS', 'READY', 'SERVED', 'CANCELLED' ],
       default: 'PENDING',
       index: true,
     },               
