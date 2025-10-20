@@ -56,7 +56,7 @@ export const registerRestaurant = asyncHandler(async (req: Request, res: Respons
     restaurantId: restaurant._id
   });
 
-  restaurant.owner = user._id;
+  restaurant.owner = user._id as any;
   await restaurant.save();
 
   const token = signToken({ userId: user._id.toString(), role: user.role, restaurantId: restaurant?._id.toString()}, false );
@@ -166,7 +166,7 @@ export const logout = asyncHandler(async (_req: Request, res: Response) => {
 });
 
 // Update my profile
-export const updateMe = asyncHandler(async (req, res) => {
+export const updateMe = asyncHandler(async (req: Request, res: Response) => {
   const userId = req.user!.userId;
   const { name, phone, email } = req.body as {
     name?: string;
@@ -195,7 +195,7 @@ export const updateMe = asyncHandler(async (req, res) => {
 });
 
 // Update my password 
-export const changeMyPassword = asyncHandler(async (req, res) => {
+export const changeMyPassword = asyncHandler(async (req: Request, res: Response) => {
   const userId = req.user!.userId;
   const { currentPassword, newPassword } = req.body as {
     currentPassword?: string;
@@ -219,7 +219,7 @@ export const changeMyPassword = asyncHandler(async (req, res) => {
 });
 
 // Get my restaurant details
-export const getMyRestaurant = asyncHandler(async (req, res) => {
+export const getMyRestaurant = asyncHandler(async (req: Request, res: Response) => {
   const r = await Restaurant.findById(req.user!.restaurantId!).lean();
   if (!r) return res.status(404).json({ message: 'Restaurant not found' });
 
@@ -236,7 +236,7 @@ export const getMyRestaurant = asyncHandler(async (req, res) => {
 });
 
 // Update my restaurant details
-export const updateMyRestaurant = asyncHandler(async (req, res) => {
+export const updateMyRestaurant = asyncHandler(async (req: Request, res: Response) => {
   const rId = req.user!.restaurantId!;
   const { name, phone, address, type, openTime, closeTime } = req.body as {
     name?: string; phone?: string; address?: string; type?: string; openTime?: string; closeTime?: string;
