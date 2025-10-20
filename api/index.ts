@@ -1,6 +1,7 @@
 import 'dotenv/config';
 import mongoose from 'mongoose';
 import app from '../src/app';
+import { VercelRequest, VercelResponse } from '@vercel/node';
 
 let isConnected = false;
 
@@ -16,7 +17,7 @@ async function connectDB() {
   }
 }
 
-export default async function handler(req: any, res: any) {
+export default async function handler(req: VercelRequest, res: VercelResponse) {
   await connectDB();
   return app(req, res);
 }
