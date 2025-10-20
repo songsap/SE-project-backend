@@ -26,14 +26,14 @@ async function buildOrderSnapshot(restaurantId: any, items: InputItem[]) {
     }
   }
 
-  const ids = items.map((i) => i.menuItemId);
+  const ids = [...new Set(items.map((i) => i.menuItemId))]; // Remove duplicates
   const menus = await MenuItem.find({
     _id: { $in: ids },
     restaurantId,
     isAvailable: true, // กันสั่งของที่ปิดขาย
   }).lean();
 
-  if (menus.length !== items.length) {
+  if (menus.length !== ids.length) {
     throw Object.assign(new Error('Some items are not available'), { status: 400 });
   }
 
