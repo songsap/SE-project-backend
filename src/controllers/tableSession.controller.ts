@@ -113,11 +113,11 @@ export const resetSession = asyncHandler(async (req: Request, res: Response) => 
   const sess = await TableSession.findOne({ _id: id, restaurantId: rId });
   if (!sess) return res.status(404).json({ message: 'Session not found' });
 
-  sess.status = 'RESET';
+  sess.status = 'ACTIVE';
   sess.token = newToken();  
   sess.openedAt = new Date();
   sess.expiresAt = new Date(Date.now() + SESSION_TTL_HOURS * 60 * 60 * 1000);
   await sess.save();
 
-  res.json({ ok: true, sessionId: sess._id, token: sess.token, expiresAt: sess.expiresAt });
+  res.json({ ok: true, sessionId: sess._id, token: sess.token, sessionToken: sess.token, tableNo: sess.tableNo, expiresAt: sess.expiresAt });
 });
