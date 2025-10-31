@@ -132,7 +132,7 @@ export const updateOrderStatus = asyncHandler(async (req: Request, res: Response
   const order = await Order.findOne({ _id: id, restaurantId: rId });
   if (!order) return res.status(404).json({ message: 'Order not found' });
 
-  if (!ALLOWED[order.status].includes(nextStatus)) {
+  if (!ALLOWED[order.status as OrderStatus].includes(nextStatus)) {
     return res.status(400).json({ message: `Invalid transition ${order.status} -> ${nextStatus}` });
   }
 

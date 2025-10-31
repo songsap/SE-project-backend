@@ -2,7 +2,7 @@ import { Router } from 'express';
 import auth from '../middlewares/auth';
 import { requireRole } from '../middlewares/role';
 import { useRestaurantScope } from '../middlewares/scope';
-import { openSession, validateSession, getSessionById, closeSession, resetSession } from '../controllers/tableSession.controller';
+import { openSession, validateSession, getSessionById, closeSession, resetSession, getSessionStats } from '../controllers/tableSession.controller';
 
 const r = Router();
 
@@ -15,5 +15,6 @@ r.get('/:id', getSessionById);
 r.use(auth, requireRole('restaurant'), useRestaurantScope);
 r.post('/:id/close', closeSession);
 r.post('/:id/reset', resetSession);
+r.get('/:id/stats', getSessionStats);
 
 export default r;

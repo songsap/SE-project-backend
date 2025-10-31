@@ -3,6 +3,7 @@ import crypto from 'crypto';
 import { asyncHandler } from '../utils/asyncHandler';
 import TableSession from '../models/TableSession';
 import Restaurant from '../models/Restaurant';
+import { OrderTransferService } from '../services/OrderTransferService';
 
 //expire time kub
 const SESSION_TTL_HOURS = 3;
@@ -93,22 +94,66 @@ export const getSessionById = asyncHandler(async (req: Request, res: Response) =
 
 // staff
 export const closeSession = asyncHandler(async (req: Request, res: Response) => {
-  const rId = req.user!.restaurantId!;
+  const rId = req.user?.restaurantId;
   const { id } = req.params;
+
+  if (!rId) {
+    return res.status(400).json({ message: 'Restaurant ID is required' });
+  }
 
   const sess = await TableSession.findOne({ _id: id, restaurantId: rId });
   if (!sess) return res.status(404).json({ message: 'Session not found' });
 
-  sess.status = 'CLOSED';
-  await sess.save();
+  if (sess.status === 'CLOSED') {
+    return res.status(400).json({ message: 'Session is already closed' });
+  }
 
-  res.json({ ok: true });
+  try {
+    // Transfer orders to history before closing session
+    console.log(`Starting order transfer for session ${id}, restaurant ${rId}`);
+    const transferResult = await OrderTransferService.transferOrdersToHistory(id as string, rId as string);
+    
+    if (!transferResult.success) {
+      console.error(`Order transfer failed for session ${id}:`, transferResult.errors);
+      return res.status(500).json({ 
+        message: 'Failed to transfer orders to history',
+        errors: transferResult.errors
+      });
+    }
+
+    // Log transfer success
+    console.log(`Order transfer successful for session ${id}: ${transferResult.transferredCount} orders transferred`);
+    if (transferResult.sessionDuration) {
+      console.log(`Session duration: ${transferResult.sessionDuration} minutes`);
+    }
+
+    // Close the session after successful transfer
+    sess.status = 'CLOSED';
+    await sess.save();
+
+    res.json({ 
+      ok: true,
+      transferredOrders: transferResult.transferredCount,
+      sessionDuration: transferResult.sessionDuration
+    });
+
+  } catch (error) {
+    console.error(`Error during session closure for session ${id}:`, error);
+    res.status(500).json({ 
+      message: 'Failed to close session',
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
 });
 
 // staff
 export const resetSession = asyncHandler(async (req: Request, res: Response) => {
-  const rId = req.user!.restaurantId!;
+  const rId = req.user?.restaurantId;
   const { id } = req.params;
+
+  if (!rId) {
+    return res.status(400).json({ message: 'Restaurant ID is required' });
+  }
 
   const sess = await TableSession.findOne({ _id: id, restaurantId: rId });
   if (!sess) return res.status(404).json({ message: 'Session not found' });
@@ -120,4 +165,38 @@ export const resetSession = asyncHandler(async (req: Request, res: Response) => 
   await sess.save();
 
   res.json({ ok: true, sessionId: sess._id, token: sess.token, expiresAt: sess.expiresAt });
+});
+
+// staff - Get session transfer statistics
+export const getSessionStats = asyncHandler(async (req: Request, res: Response) => {
+  const rId = req.user?.restaurantId;
+  const { id } = req.params;
+
+  if (!rId) {
+    return res.status(400).json({ message: 'Restaurant ID is required' });
+  }
+
+  const sess = await TableSession.findOne({ _id: id, restaurantId: rId });
+  if (!sess) return res.status(404).json({ message: 'Session not found' });
+
+  try {
+    const stats = await OrderTransferService.getTransferStats(id as string, rId as string);
+    
+    res.json({
+      ok: true,
+      sessionId: id,
+      tableNo: sess.tableNo,
+      status: sess.status,
+      activeOrderCount: stats.activeOrderCount,
+      historyOrderCount: stats.historyOrderCount,
+      openedAt: sess.openedAt,
+      lastActiveAt: sess.lastActiveAt
+    });
+  } catch (error) {
+    console.error(`Error getting session stats for session ${id}:`, error);
+    res.status(500).json({ 
+      message: 'Failed to get session statistics',
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
 });
