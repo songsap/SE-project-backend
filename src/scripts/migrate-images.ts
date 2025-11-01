@@ -29,7 +29,7 @@ async function migrateImages() {
 
   for (const item of items) {
     try {
-      const filePath = path.join(uploadsDir, item.imageUrl?.replace('/uploads/', '') || '');
+      const filePath = path.join(uploadsDir, item.imageUrl.replace('/uploads/', ''));
       
       if (fs.existsSync(filePath)) {
         // Read and process the image

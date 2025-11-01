@@ -1,7 +1,7 @@
 import 'dotenv/config';
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
-import User from '../models/User';
+import User from '../src/models/User';
 
 async function run() {
   const uri = process.env.MONGODB_URI!;

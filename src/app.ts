@@ -8,7 +8,6 @@ import menuRoutes from './routes/menu.routes';
 import publicRoutes from './routes/public.routes';
 import tableSessionRoutes from './routes/table-sessions.routes';
 import orderRoutes from './routes/orders.routes';
-import orderHistoryRoutes from './routes/orderHistory.routes';
 import imageRoutes from './routes/images.routes';
 
 const app = express();
@@ -32,6 +31,5 @@ app.use('/api/v1/images', imageRoutes);
 
 app.use('/api/v1/table-sessions', tableSessionRoutes);
 app.use('/api/v1/orders', orderRoutes);
-app.use('/api/v1/orders', orderHistoryRoutes);
 
 export default app;
