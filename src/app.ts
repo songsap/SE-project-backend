@@ -10,6 +10,11 @@ import tableSessionRoutes from './routes/table-sessions.routes';
 import orderRoutes from './routes/orders.routes';
 import orderHistoryRoutes from './routes/orderHistory.routes';
 import imageRoutes from './routes/images.routes';
+import billingRoutes from './routes/billingAndPayment.routes';
+import { validateAndLogEnvironment } from './utils/validateEnv';
+
+// Validate environment variables on startup
+validateAndLogEnvironment();
 
 const app = express();
 
@@ -33,5 +38,6 @@ app.use('/api/v1/images', imageRoutes);
 app.use('/api/v1/table-sessions', tableSessionRoutes);
 app.use('/api/v1/orders', orderRoutes);
 app.use('/api/v1/orders', orderHistoryRoutes);
+app.use('/api/v1/billing', billingRoutes);
 
 export default app;
