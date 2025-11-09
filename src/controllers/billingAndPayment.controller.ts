@@ -3,6 +3,7 @@ import { asyncHandler } from '../utils/asyncHandler';
 import Payment from '../models/billingAndPayment';
 import Order from '../models/Order';
 import TableSession from '../models/TableSession';
+import Restaurant from '../models/Restaurant';
 import mongoose from 'mongoose';
 
 /**
@@ -84,19 +85,30 @@ export const generateQRCode = asyncHandler(async (req: Request, res: Response) =
       return res.status(400).json({ message: 'Total amount must be greater than zero' });
     }
 
-    // Read PROMPTPAY_PHONE_NUMBER from environment variables
-    const promptPayPhone = process.env.PROMPTPAY_PHONE_NUMBER;
+    // Fetch restaurant to get phone number for PromptPay
+    const restaurant = await Restaurant.findById(restaurantId);
     
-    if (!promptPayPhone) {
-      console.error('PROMPTPAY_PHONE_NUMBER environment variable is not configured');
-      return res.status(500).json({ message: 'PromptPay phone number not configured. Please contact support.' });
+    if (!restaurant) {
+      return res.status(404).json({ message: 'Restaurant not found' });
     }
+
+    // Check if restaurant has a phone number configured
+    if (!restaurant.phone) {
+      return res.status(400).json({ 
+        message: 'Restaurant phone number not configured. Please add a phone number in restaurant settings.' 
+      });
+    }
+
+    // Use restaurant's phone number for PromptPay
+    const promptPayPhone = restaurant.phone;
 
     // Validate phone number format (should be 10 digits)
     const cleanPhone = promptPayPhone.replace(/\D/g, '');
     if (cleanPhone.length !== 10) {
-      console.error('Invalid PROMPTPAY_PHONE_NUMBER format:', promptPayPhone);
-      return res.status(500).json({ message: 'Invalid PromptPay phone number configuration. Please contact support.' });
+      console.error('Invalid restaurant phone number format:', promptPayPhone);
+      return res.status(400).json({ 
+        message: 'Invalid restaurant phone number format. Please update your phone number to a valid 10-digit Thai phone number.' 
+      });
     }
 
     // Generate PromptPay QR code URL with proper formatting
