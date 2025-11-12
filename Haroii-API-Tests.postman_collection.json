@@ -1,0 +1,501 @@
+{
+	"info": {
+		"name": "Haroii API Tests",
+		"description": "API testing collection for Haroii backend",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "https://se-project-backend-e7k3.vercel.app/api/v1",
+			"type": "string"
+		},
+		{
+			"key": "token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "restaurant_slug",
+			"value": "oasis-1",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "Authentication",
+			"item": [
+				{
+					"name": "Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set('token', jsonData.token);",
+									"    pm.collectionVariables.set('restaurant_slug', jsonData.user.restaurant.slug);",
+									"    console.log('Token saved:', jsonData.token);",
+									"    console.log('Restaurant slug:', jsonData.user.restaurant.slug);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"admin@admin.com\",\n  \"password\": \"12345678\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/login",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "login"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Me",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/auth/me",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "me"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Register",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Test User\",\n  \"email\": \"test@example.com\",\n  \"password\": \"password123\",\n  \"phone\": \"0812345678\",\n  \"restaurantName\": \"Test Restaurant\",\n  \"restaurantPhone\": \"0212345678\",\n  \"restaurantAddress\": \"123 Test St\",\n  \"restaurantType\": \"Thai\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/register",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "register"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Menu Management",
+			"item": [
+				{
+					"name": "Get All Menu Items",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/menu",
+							"host": ["{{base_url}}"],
+							"path": ["menu"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Menu Item",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "name",
+									"value": "ผัดไทย",
+									"type": "text"
+								},
+								{
+									"key": "description",
+									"value": "ผัดไทยรสชาติดั้งเดิม",
+									"type": "text"
+								},
+								{
+									"key": "price",
+									"value": "50",
+									"type": "text"
+								},
+								{
+									"key": "category",
+									"value": "อาหารจานหลัก",
+									"type": "text"
+								},
+								{
+									"key": "isAvailable",
+									"value": "true",
+									"type": "text"
+								},
+								{
+									"key": "image",
+									"type": "file",
+									"src": []
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/menu",
+							"host": ["{{base_url}}"],
+							"path": ["menu"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Menu Item",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "name",
+									"value": "ผัดไทยพิเศษ",
+									"type": "text"
+								},
+								{
+									"key": "price",
+									"value": "60",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/menu/:menuItemId",
+							"host": ["{{base_url}}"],
+							"path": ["menu", ":menuItemId"],
+							"variable": [
+								{
+									"key": "menuItemId",
+									"value": "MENU_ITEM_ID_HERE"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Menu Item",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/menu/:menuItemId",
+							"host": ["{{base_url}}"],
+							"path": ["menu", ":menuItemId"],
+							"variable": [
+								{
+									"key": "menuItemId",
+									"value": "MENU_ITEM_ID_HERE"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Public Endpoints",
+			"item": [
+				{
+					"name": "Get Public Menu",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/public/{{restaurant_slug}}/menu",
+							"host": ["{{base_url}}"],
+							"path": ["public", "{{restaurant_slug}}", "menu"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Table Sessions",
+			"item": [
+				{
+					"name": "Open Table Session",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set('table_session_id', jsonData.sessionId);",
+									"    console.log('Table session ID:', jsonData.sessionId);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"restaurantSlug\": \"{{restaurant_slug}}\",\n  \"tableNo\": \"1\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/table-sessions/open",
+							"host": ["{{base_url}}"],
+							"path": ["table-sessions", "open"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Close Table Session",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/table-sessions/:sessionId/close",
+							"host": ["{{base_url}}"],
+							"path": ["table-sessions", ":sessionId", "close"],
+							"variable": [
+								{
+									"key": "sessionId",
+									"value": "{{table_session_id}}"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Orders",
+			"item": [
+				{
+					"name": "Get All Orders",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/orders",
+							"host": ["{{base_url}}"],
+							"path": ["orders"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Order",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"tableSessionId\": \"{{table_session_id}}\",\n  \"items\": [\n    {\n      \"menuItemId\": \"MENU_ITEM_ID_HERE\",\n      \"qty\": 2,\n      \"note\": \"ไม่ใส่ผัก\"\n    }\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/orders",
+							"host": ["{{base_url}}"],
+							"path": ["orders"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Order Status",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nextStatus\": \"IN_PROGRESS\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/orders/:orderId/status",
+							"host": ["{{base_url}}"],
+							"path": ["orders", ":orderId", "status"],
+							"variable": [
+								{
+									"key": "orderId",
+									"value": "ORDER_ID_HERE"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Billing & Payment",
+			"item": [
+				{
+					"name": "Generate QR Code",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set('payment_id', jsonData.paymentId);",
+									"    console.log('Payment ID:', jsonData.paymentId);",
+									"    console.log('QR Code URL:', jsonData.qrCodeUrl);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"tableSessionId\": \"{{table_session_id}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/billing/generate-qr",
+							"host": ["{{base_url}}"],
+							"path": ["billing", "generate-qr"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Confirm Payment",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"paymentId\": \"{{payment_id}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/billing/confirm-payment",
+							"host": ["{{base_url}}"],
+							"path": ["billing", "confirm-payment"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Payment Status",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/billing/payment-status",
+							"host": ["{{base_url}}"],
+							"path": ["billing", "payment-status"]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}
